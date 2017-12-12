@@ -5,6 +5,9 @@
 (defun generate-fixed-size-number (bits)
   (logior (ash 1 (1- bits)) (random (ash 1 bits) *package-random-state*)))
 
+(defun generate-group-element (base)
+  (loop for result = (random base *package-random-state*) if (= (gcd result base) 1) return result))
+
 ;; makes a binary expansion of an integer in big-endian format
 ;; returns binary-array
 (defun binary-expansion (value)
@@ -23,7 +26,7 @@
           for i from (1- (length exponent)) downto 0
           do (setf result (* result result))
           if (eq (bit exponent i) 1) do (setf result (* result base))
-            do (setf result (mod result modulo))
+          do (setf result (mod result modulo))
           finally (return result))))
 
 ;; binary search for extracting all powers of 2 from number
@@ -39,7 +42,7 @@
     (loop with result = (ash 1 zero-tail-upper-bound-power-of-2)
           for test-power-of-2 from (1- zero-tail-upper-bound-power-of-2) downto 0
           if (eq (ldb (byte (+ result (ash 1 test-power-of-2)) 0) num) 0)
-            do (setf result (+ result (ash 1 test-power-of-2)))
+          do (setf result (+ result (ash 1 test-power-of-2)))
           finally (return result))))
 
 (defun prime? (test-number &optional (reliability 20))
