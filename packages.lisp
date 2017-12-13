@@ -10,5 +10,9 @@
 
 (defpackage :bellare-miner
   (:use :cl :number-theory)
-  (:export generate-key
-           update-key))
+  (:export *boundary*
+           *challenge-length*
+           generate-key
+           update-key
+           sign
+           verify))

@@ -8,4 +8,5 @@
                                    *default-pathname-defaults*))
          asdf:*central-registry*
          :test #'equal)
+
 (asdf:load-system :bellare-miner-signing)

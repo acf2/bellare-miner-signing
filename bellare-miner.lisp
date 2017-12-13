@@ -64,4 +64,38 @@
           :key (loop for key-point in (getf secret-key :key)
                      collect (exptmod key-point 2 (getf secret-key :mod))))))
 
+(defun sign (message-bytes secret-key)
+  (let* ((random-inversible (generate-group-element (getf secret-key :mod)))
+         (commitment (exptmod random-inversible
+                              (ash 1 (- (1+ (getf secret-key :time-periods))
+                                        (getf secret-key :current-state)))
+                              (getf secret-key :mod)))
+         (challenge (random-oracle (concatenate '(vector (unsigned-byte 8))
+                                                (integer-to-bytes (getf secret-key :current-state))
+                                                (integer-to-bytes commitment)
+                                                message-bytes)))
+         (response (reduce (lambda (num1 num2)
+                             (mod (* num1 num2) (getf secret-key :mod)))
+                           (cons random-inversible
+                                 (loop for key-point in (getf secret-key :key)
+                                       for is-present in challenge
+                                       collect (if (= is-present 1) key-point 1))))))
+    (list :timestamp (getf secret-key :current-state)
+          :commitment commitment
+          :response response)))
+
+(defun verify (message-bytes signature public-key)
+  (let ((challenge (random-oracle (concatenate '(vector (unsigned-byte 8))
+                                               (integer-to-bytes (getf signature :timestamp))
+                                               (integer-to-bytes (getf signature :commitment))
+                                               message-bytes))))
+    (= (exptmod (getf signature :response)
+                (ash 1 (- (1+ (getf public-key :time-periods)) (getf signature :timestamp)))
+                (getf public-key :mod))
+       (reduce (lambda (num1 num2)
+                 (mod (* num1 num2) (getf public-key :mod)))
+               (cons (getf signature :commitment)
+                     (loop for key-point in (getf public-key :key)
+                           for is-present in challenge
+                           collect (if (= is-present 1) key-point 1)))))))
 
