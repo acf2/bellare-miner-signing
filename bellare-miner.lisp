@@ -25,7 +25,6 @@
             do (push (ldb (byte 1 j) (aref bytes (1+ (floor bits 8)))) result))
       result))
   (let ((rnd-arr (ironclad:digest-sequence :sha512 msg-bytes)))
-    (format t "BITS: ~A~%" bits)
     (append
       (loop for bl from 0 to (1- (floor bits 512))
             append (extract-bits rnd-arr 512)
@@ -51,9 +50,9 @@
          (secret-key (list :mod N :time-periods time-periods :current-state 0 :key (list)))
          (public-key (list :mod N :time-periods time-periods :key (list))))
     (loop for i from 1 to *challenge-length*
-          for key-part = (generate-group-element N)
-          do (push key-part (getf secret-key :key))
-          do (push (exptmod key-part (mod (ash 1 (1+ time-periods)) fi-N) N) (getf public-key :key)))
+          for key-point = (generate-group-element N)
+          do (push key-point (getf secret-key :key))
+          do (push (exptmod key-point (mod (ash 1 (1+ time-periods)) fi-N) N) (getf public-key :key)))
     (list :secret-key secret-key :public-key public-key)))
 
 (defun update-key (secret-key)
@@ -62,9 +61,7 @@
     (list :mod (getf secret-key :mod)
           :time-periods (getf secret-key :time-periods)
           :current-state (1+ (getf secret-key :current-state))
-          :key (loop for key-part in (getf secret-key :key)
-                     collect (exptmod key-part
-                                      2
-                                      (getf secret-key :mod))))))
+          :key (loop for key-point in (getf secret-key :key)
+                     collect (exptmod key-point 2 (getf secret-key :mod))))))
 
 
