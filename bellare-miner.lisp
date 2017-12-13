@@ -45,7 +45,7 @@
 
 (defun generate-key (time-periods)
   (let* ((p (generate-blum-number))
-         (q (generate-blum-number))
+         (q (loop for atpt = (generate-blum-number) if (not (= atpt p)) return atpt))
          (N (* p q))
          (fi-N (* (1- p) (1- q)))
          (secret-key (list :mod N :time-periods time-periods :current-state 0 :key (list)))
