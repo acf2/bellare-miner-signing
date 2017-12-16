@@ -3,14 +3,6 @@
 
 (in-package :bellare-miner)
 
-(defun decode-base64 (str)
-  (with-input-from-string (in str)
-    (s-base64:decode-base64-bytes in)))
-
-(defun encode-base64 (arr)
-  (with-output-to-string (out)
-    (s-base64:encode-base64-bytes arr out)))
-
 ; TODO make it 4096
 (defparameter *boundary* 256)
 (defparameter *challenge-length* 3)
@@ -47,40 +39,40 @@
          (q (loop for atpt = (generate-blum-number) if (not (= atpt p)) return atpt))
          (N (* p q))
          (fi-N (* (1- p) (1- q)))
-         (secret-key (list :mod N :time-periods time-periods :current-state 0 :key (list)))
+         (private-key (list :mod N :time-periods time-periods :current-state 0 :key (list)))
          (public-key (list :mod N :time-periods time-periods :key (list))))
     (loop for i from 1 to *challenge-length*
           for key-point = (generate-group-element N)
-          do (push key-point (getf secret-key :key))
+          do (push key-point (getf private-key :key))
           do (push (exptmod key-point (mod (ash 1 (1+ time-periods)) fi-N) N) (getf public-key :key)))
-    (list :secret-key secret-key :public-key public-key)))
+    (list :private-key private-key :public-key public-key)))
 
-(defun update-key (secret-key)
-  (if (= (getf secret-key :current-state) (getf secret-key :time-periods))
+(defun update-key (private-key)
+  (if (= (getf private-key :current-state) (getf private-key :time-periods))
     nil
-    (list :mod (getf secret-key :mod)
-          :time-periods (getf secret-key :time-periods)
-          :current-state (1+ (getf secret-key :current-state))
-          :key (loop for key-point in (getf secret-key :key)
-                     collect (exptmod key-point 2 (getf secret-key :mod))))))
+    (list :mod (getf private-key :mod)
+          :time-periods (getf private-key :time-periods)
+          :current-state (1+ (getf private-key :current-state))
+          :key (loop for key-point in (getf private-key :key)
+                     collect (exptmod key-point 2 (getf private-key :mod))))))
 
-(defun sign (message-bytes secret-key)
-  (let* ((random-inversible (generate-group-element (getf secret-key :mod)))
+(defun sign (message-bytes private-key)
+  (let* ((random-inversible (generate-group-element (getf private-key :mod)))
          (commitment (exptmod random-inversible
-                              (ash 1 (- (1+ (getf secret-key :time-periods))
-                                        (getf secret-key :current-state)))
-                              (getf secret-key :mod)))
+                              (ash 1 (- (1+ (getf private-key :time-periods))
+                                        (getf private-key :current-state)))
+                              (getf private-key :mod)))
          (challenge (random-oracle (concatenate '(vector (unsigned-byte 8))
-                                                (integer-to-bytes (getf secret-key :current-state))
+                                                (integer-to-bytes (getf private-key :current-state))
                                                 (integer-to-bytes commitment)
                                                 message-bytes)))
          (response (reduce (lambda (num1 num2)
-                             (mod (* num1 num2) (getf secret-key :mod)))
+                             (mod (* num1 num2) (getf private-key :mod)))
                            (cons random-inversible
-                                 (loop for key-point in (getf secret-key :key)
+                                 (loop for key-point in (getf private-key :key)
                                        for is-present in challenge
                                        collect (if (= is-present 1) key-point 1))))))
-    (list :timestamp (getf secret-key :current-state)
+    (list :timestamp (getf private-key :current-state)
           :commitment commitment
           :response response)))
 

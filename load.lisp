@@ -3,9 +3,11 @@
 (ql:quickload :s-base64 :silent t)
 (ql:quickload :ironclad :silent t)
 (ql:quickload :babel :silent t)
+(ql:quickload :apply-argv :silent t)
 
-(pushnew (directory-namestring (or *load-truename*
-                                   *default-pathname-defaults*))
+(defparameter work-dir (directory-namestring (or *load-truename* *default-pathname-defaults*)))
+
+(pushnew work-dir
          asdf:*central-registry*
          :test #'equal)
 
