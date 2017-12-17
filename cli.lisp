@@ -19,6 +19,27 @@
                           (setf ,fail t)))
        (when ,fail (sb-ext:exit)))))
 
+(defun force-write-to-file (filename value)
+  (with-standard-io-syntax
+    (with-open-file (f filename :direction :output :if-exists :supersede)
+      (format f "~S~%" value))))
+
+(defun read-from-file-if-exists (filename)
+  (with-standard-io-syntax
+    (with-open-file (f filename :direction :input :if-does-not-exist nil)
+      (and f (read f)))))
+
+(defun read-bytes-from-file-if-exists (filename)
+  (with-standard-io-syntax
+    (with-open-file (f filename :element-type '(unsigned-byte 8) :direction :input :if-does-not-exist nil)
+      (loop with result = nil
+            with buffer = (make-array 4096 :element-type '(unsigned-byte 8))
+            with bytes
+            do (setf bytes (read-sequence buffer f))
+            do (setf result (concatenate '(vector (unsigned-byte 8)) result (subseq buffer 0 bytes)))
+            while (= bytes 4096)
+            finally (return result)))))
+
 (setf-if-not-nil bellare-miner:*boundary* (getf-int argv :bits))
 (setf-if-not-nil bellare-miner:*challenge-length* (getf-int argv :points))
 
@@ -27,59 +48,34 @@
              (public-key-file "You should specify public key filename for generation of the key~%")
              (time-periods "You should specify number of time periods for generation of the key~%"))
   (let ((key (bellare-miner:generate-key time-periods)))
-    (with-standard-io-syntax
-      (with-open-file (pub-out public-key-file :direction :output :if-exists :supersede)
-        (format pub-out "~S~%" (getf key :public-key)))
-      (with-open-file (prv-out private-key-file :direction :output :if-exists :supersede)
-        (format prv-out "~S~%" (getf key :private-key))))))
+    (force-write-to-file public-key-file (getf key :public-key))
+    (force-write-to-file private-key-file (getf key :private-key))))
 
 (defun update-key (private-key-file)
   (fail-quit (private-key-file "Please specify private key for update~%"))
-  (let (private-key)
-    (with-standard-io-syntax
-      (with-open-file (prv-in private-key-file :direction :input :if-does-not-exist nil)
-        (setf private-key (and private-key-file (read prv-in)))))
-    (fail-quit (private-key "Private key is not valid~%"))
+  (let ((private-key (read-from-file-if-exists private-key-file)))
+    (fail-quit (private-key "Incorrect private key~%"))
     (setf private-key (bellare-miner:update-key private-key))
-    (with-standard-io-syntax
-      (with-open-file (prv-out private-key-file :direction :output :if-exists :supersede)
-        (format prv-out "~S~%" private-key)))))
+    (force-write-to-file private-key-file private-key)))
 
 (defun sign (message-file private-key-file signature-file)
   (fail-quit (private-key-file "You should specify a private key for signing")
              (message-file "You can not sign nothing: please specify a file to sign")
              (signature-file "Please, provide a signature file name"))
-  (let (private-key message signature)
-    (with-standard-io-syntax
-      (with-open-file (prv-in private-key-file :direction :input :if-does-not-exist nil)
-        (setf private-key (and prv-in (read prv-in))))
-      (with-open-file (msg-in message-file :element-type '(unsigned-byte 8) :direction :input :if-does-not-exist nil)
-        (loop with buffer = (make-array 4096 :element-type '(unsigned-byte 8))
-              with bytes
-              do (setf bytes (read-sequence buffer msg-in))
-              do (setf message (concatenate '(vector (unsigned-byte 8)) message (subseq buffer 0 bytes)))
-              while (= bytes 4096))))
-    (setf signature (bellare-miner:sign message private-key))
-    (with-standard-io-syntax
-      (with-open-file (sgn-out signature-file :direction :output :if-exists :supersede)
-        (format sgn-out "~S~%" signature)))))
+  (let ((private-key (read-from-file-if-exists private-key-file))
+        (message (read-bytes-from-file-if-exists message-file)))
+      (fail-quit (private-key "Incorrect private key~%"))
+      (force-write-to-file signature-file (bellare-miner:sign message private-key))))
 
 (defun verify (message-file signature-file public-key-file)
   (fail-quit (public-key-file "You should specify a public key for verifying")
              (message-file "You can not verify nothing: please specify a file")
              (signature-file "You should provide a signature to check"))
-  (let (public-key message signature)
-    (with-standard-io-syntax
-      (with-open-file (pub-in public-key-file :direction :input :if-does-not-exist nil)
-        (setf public-key (and pub-in (read pub-in))))
-      (with-open-file (msg-in message-file :element-type '(unsigned-byte 8) :direction :input :if-does-not-exist nil)
-        (loop with buffer = (make-array 4096 :element-type '(unsigned-byte 8))
-              with bytes
-              do (setf bytes (read-sequence buffer msg-in))
-              do (setf message (concatenate '(vector (unsigned-byte 8)) message (subseq buffer 0 bytes)))
-              while (= bytes 4096)))
-      (with-open-file (sgn-in signature-file :direction :input :if-does-not-exist nil)
-        (setf signature (and sgn-in (read sgn-in)))))
+  (let ((public-key (read-from-file-if-exists public-key-file))
+        (message (read-bytes-from-file-if-exists message-file))
+        (signature (read-from-file-if-exists signature-file)))
+    (fail-quit (public-key "Incorrect public key~%")
+               (signature "Incorrect signature~%"))
     (if (bellare-miner:verify message signature public-key)
       (format t "~A: valid signature for '~A'~%" signature-file message-file)
       (format t "~A: INVALID SIGNATURE FOR '~A'~%ATTENTION: MESSAGE WAS MODIFIED OR SIGNATURE WAS FORGED~%" signature-file message-file))))
