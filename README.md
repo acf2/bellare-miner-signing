@@ -1,4 +1,4 @@
-# bellare-miner-signing
+# bm-signing
 Bellare-Miner scheme for forward secure signing written in Common Lisp
 
 ## Usage

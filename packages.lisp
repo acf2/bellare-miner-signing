@@ -8,7 +8,7 @@
            prime?
            generate-prime))
 
-(defpackage :bellare-miner
+(defpackage :bm-signing
   (:use :cl :number-theory)
   (:export *boundary*
            *challenge-length*

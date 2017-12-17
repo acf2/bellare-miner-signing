@@ -43,14 +43,14 @@
             while (= bytes 4096)
             finally (return result)))))
 
-(setf-if-not-nil bellare-miner:*boundary* (getf-int argv :bits))
-(setf-if-not-nil bellare-miner:*challenge-length* (getf-int argv :points))
+(setf-if-not-nil bm-signing:*boundary* (getf-int argv :bits))
+(setf-if-not-nil bm-signing:*challenge-length* (getf-int argv :points))
 
 (defun generate-key (private-key-file public-key-file time-periods)
   (fail-quit (private-key-file "You should specify private key filename for generation of the key~%")
              (public-key-file "You should specify public key filename for generation of the key~%")
              (time-periods "You should specify number of time periods for generation of the key~%"))
-  (let ((key (bellare-miner:generate-key time-periods)))
+  (let ((key (bm-signing:generate-key time-periods)))
     (force-write-to-file public-key-file (getf key :public-key))
     (force-write-to-file private-key-file (getf key :private-key))))
 
@@ -58,7 +58,7 @@
   (fail-quit (private-key-file "Please specify private key for update~%"))
   (let ((private-key (read-from-file-if-exists private-key-file)))
     (fail-quit (private-key "Incorrect private key~%"))
-    (setf private-key (bellare-miner:update-key private-key))
+    (setf private-key (bm-signing:update-key private-key))
     (force-write-to-file private-key-file private-key)))
 
 (defun sign (message-file private-key-file signature-file)
@@ -68,7 +68,7 @@
   (let ((private-key (read-from-file-if-exists private-key-file))
         (message (read-bytes-from-file-if-exists message-file)))
       (fail-quit (private-key "Incorrect private key~%"))
-      (force-write-to-file signature-file (bellare-miner:sign message private-key))))
+      (force-write-to-file signature-file (bm-signing:sign message private-key))))
 
 (defun verify (message-file signature-file public-key-file)
   (fail-quit (public-key-file "You should specify a public key for verifying")
@@ -79,7 +79,7 @@
         (signature (read-from-file-if-exists signature-file)))
     (fail-quit (public-key "Incorrect public key~%")
                (signature "Incorrect signature~%"))
-    (if (bellare-miner:verify message signature public-key)
+    (if (bm-signing:verify message signature public-key)
       (format t "~A: valid signature for '~A'~%" signature-file message-file)
       (format t "~A: INVALID SIGNATURE FOR '~A'~%ATTENTION: MESSAGE WAS MODIFIED OR SIGNATURE WAS FORGED~%" signature-file message-file))))
 

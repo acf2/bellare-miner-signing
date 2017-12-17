@@ -10,4 +10,4 @@
          asdf:*central-registry*
          :test #'equal)
 
-(asdf:load-system :bellare-miner-signing)
+(asdf:load-system :bm-signing)

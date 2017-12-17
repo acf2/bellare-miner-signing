@@ -1,7 +1,7 @@
 ;;;; forward-secure-signing.lisp
 ;;;; This package implements Bellare-Miner scheme
 
-(in-package :bellare-miner)
+(in-package :bm-signing)
 
 (defparameter *boundary* 2048)
 (defparameter *challenge-length* 32)
