@@ -1,6 +1,5 @@
 ;;;; load.lisp
 
-(ql:quickload :s-base64 :silent t)
 (ql:quickload :ironclad :silent t)
 (ql:quickload :babel :silent t)
 (ql:quickload :apply-argv :silent t)

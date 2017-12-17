@@ -2,7 +2,7 @@
 
 (asdf:defsystem bellare-miner-signing
   :description "bellare-miner-signing: implementation of forward secure signing algorithm"
-  :version "0.0.1"
+  :version "0.0.2"
   :author "Дмитрий Киселёв <acrfnv@gmail.com>"
   :depends-on (:ironclad :babel)
   :components ((:file "packages")
