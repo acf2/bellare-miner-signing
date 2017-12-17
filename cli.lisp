@@ -1,3 +1,6 @@
+;;;; cli.lisp
+;;;; Command-line interface for Bellare-Miner signing scheme
+
 (defparameter argv (apply-argv:parse-argv (loop for elem in (rest *posix-argv*)
                                                 collect (coerce elem 'string))))
 (defparameter current-dir (pathname-directory *default-pathname-defaults*))

@@ -1,3 +1,6 @@
+;;;; number-theory.lisp
+;;;; Essential functions for implementing a numeric algorithm
+
 (in-package :number-theory)
 
 (defparameter *package-random-state* (make-random-state t))
