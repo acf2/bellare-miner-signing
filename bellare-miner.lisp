@@ -3,9 +3,8 @@
 
 (in-package :bellare-miner)
 
-; TODO make it 4096
-(defparameter *boundary* 256)
-(defparameter *challenge-length* 3)
+(defparameter *boundary* 2048)
+(defparameter *challenge-length* 32)
 
 (defun random-oracle (msg-bytes &optional (bits *challenge-length*))
   (defun extract-bits (bytes bits)
