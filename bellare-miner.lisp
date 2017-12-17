@@ -23,14 +23,6 @@
             do (setf rnd-arr (ironclad:digest-sequence :sha512 msg-bytes)))
       (extract-bits rnd-arr (mod bits 512)))))
 
-(defun integer-to-bytes (int)
-  (let ((result (make-array 1 :adjustable t :element-type '(unsigned-byte 8) :fill-pointer 0)))
-    (loop with num = int
-          for i from 0 to (1- (ceiling (integer-length num) 8))
-          for bite = (ldb (byte 8 (* i 8)) num)
-          do (vector-push-extend bite result))
-    result))
-
 (defun generate-blum-number ()
   (loop for num = (generate-prime (/ *boundary* 2)) when (= (mod num 4) 3) return num))
 
@@ -63,8 +55,8 @@
                                         (getf private-key :current-state)))
                               (getf private-key :mod)))
          (challenge (random-oracle (concatenate '(vector (unsigned-byte 8))
-                                                (integer-to-bytes (getf private-key :current-state))
-                                                (integer-to-bytes commitment)
+                                                (ironclad:integer-to-octets (getf private-key :current-state))
+                                                (ironclad:integer-to-octets commitment)
                                                 message-bytes)))
          (response (reduce (lambda (num1 num2)
                              (mod (* num1 num2) (getf private-key :mod)))
@@ -78,8 +70,8 @@
 
 (defun verify (message-bytes signature public-key)
   (let ((challenge (random-oracle (concatenate '(vector (unsigned-byte 8))
-                                               (integer-to-bytes (getf signature :timestamp))
-                                               (integer-to-bytes (getf signature :commitment))
+                                               (ironclad:integer-to-octets (getf signature :timestamp))
+                                               (ironclad:integer-to-octets (getf signature :commitment))
                                                message-bytes))))
     (= (exptmod (getf signature :response)
                 (ash 1 (- (1+ (getf public-key :time-periods)) (getf signature :timestamp)))
