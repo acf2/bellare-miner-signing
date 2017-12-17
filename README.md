@@ -18,3 +18,5 @@ Number of points defaults to 32. Key size defaults to 2048 bits.
 
 If you want to use custom number of key points or custom key size 
 you should add to _each_ of the above commands `--points=<points>` and/or `--bits=<bits>` respectively.
+
+Assumed implementation is SBCL. Was manually tested on SBCL 1.3.11.
