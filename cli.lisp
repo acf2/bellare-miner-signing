@@ -81,7 +81,7 @@
                (signature "Incorrect signature~%"))
     (if (bm-signing:verify message signature public-key)
       (format t "~A: valid signature for '~A'~%" signature-file message-file)
-      (format t "~A: INVALID SIGNATURE FOR '~A'~%ATTENTION: MESSAGE WAS MODIFIED OR SIGNATURE WAS FORGED~%" signature-file message-file))))
+      (format t "~A: INVALID SIGNATURE FOR '~A'~%ATTENTION: MESSAGE OR SIGNATURE WERE MODIFIED~%" signature-file message-file))))
 
 (cond
   ((getf argv :generate-key)
