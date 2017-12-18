@@ -11,7 +11,7 @@ To use if from bash execute `bash launch.sh [OPTIONS]`
 bash launch.sh --generate-key --private-key=<filename> --public-key=<filename> --time-periods=<number of periods>
 bash launch.sh --update-key --private-key=<filename>
 bash launch.sh --sign --private-key=<filename> --message=<message file> --signature=<signature file>
-bash launch.sh --verify --public-key=<filename> --message=<message file> --signature=<signature file>
+bash launch.sh --verify --public-key=<filename> --message=<message file> --signature=<signature file> [--revoked-since=<state number>]
 ```
 
 Number of points defaults to 32. Key size defaults to 2048 bits.

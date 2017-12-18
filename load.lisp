@@ -10,4 +10,5 @@
          asdf:*central-registry*
          :test #'equal)
 
-(asdf:load-system :bm-signing)
+(with-open-stream (*standard-output* (make-broadcast-stream))
+  (asdf:load-system :bm-signing))
