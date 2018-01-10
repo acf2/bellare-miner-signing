@@ -1,4 +1,4 @@
-;;;; bm-signing-signing.asd
+;;;; bm-signing.asd
 
 (asdf:defsystem bm-signing
   :description "bm-signing: implementation of Bellare-Miner forward secure signing algorithm"
