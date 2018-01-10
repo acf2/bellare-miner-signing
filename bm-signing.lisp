@@ -1,4 +1,4 @@
-;;;; forward-secure-signing.lisp
+;;;; bm-signing.lisp
 ;;;; This package implements Bellare-Miner scheme
 
 (in-package :bm-signing)
